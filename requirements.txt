@@ -1,0 +1,13 @@
+oxyroute~=0.3.0
+granian[reload,uvloop]~=2.7
+SQLAlchemy~=2.0
+alembic~=1.18
+asyncpg~=0.31
+redis~=7.4
+pydantic~=2.13
+orjson~=3.11
+pytz>=2024.2
+httpx>=0.28
+pytest~=8.3
+pytest-asyncio~=0.24
+ruff>=0.8

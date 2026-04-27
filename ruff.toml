@@ -1,0 +1,37 @@
+line-length = 100
+target-version = "py314"
+
+extend-exclude = [
+    "src/database/alembic/versions",
+    ".venv",
+    "build",
+    "dist",
+]
+
+[lint]
+select = [
+    "E4",
+    "E7",
+    "E9",
+    "F",
+    "I",
+    "B",
+    "C4",
+    "UP",
+    "ARG",
+    "SIM",
+    "RUF",
+    "W",
+]
+ignore = [
+    "E501",
+]
+
+[lint.per-file-ignores]
+"tests/**/*.py" = ["ARG001", "ARG002", "B008"]
+"src/database/alembic/env.py" = ["E402"]
+
+[format]
+quote-style = "double"
+indent-style = "space"
+docstring-code-format = true
