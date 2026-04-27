@@ -216,3 +216,10 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Project-specific configs (use *.example as templates)
+config.ini
+alembic.ini
+docker/.env
+logs/
+
