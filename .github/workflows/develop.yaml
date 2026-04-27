@@ -1,0 +1,44 @@
+name: Deploy OxyRoute Template
+
+on:
+  pull_request:
+    branches: [main]
+
+env:
+  REMOTE_PATH: /opt/apps/oxyroute-template
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Write production config files
+        run: |
+          printf "%b" "${{ secrets.PROD_CONFIG_INI }}" > config.ini
+          printf "%b" "${{ secrets.PROD_ALEMBIC_INI }}" > alembic.ini
+
+      - name: Prepare SSH
+        run: |
+          mkdir -p ~/.ssh
+          printf "%s" "${{ secrets.PROD_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H "${{ secrets.PROD_SSH_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Copy files to server
+        run: |
+          ssh "${{ secrets.PROD_SSH_USER }}@${{ secrets.PROD_SSH_HOST }}" \
+            "mkdir -p ${REMOTE_PATH}"
+          scp -r \
+            .dockerignore .editorconfig .gitignore \
+            .github Makefile README.md CONTRIBUTING.md DEPLOYMENT.md QUICKSTART.md \
+            alembic.ini alembic.ini.example config.ini config.ini.example \
+            docker pyproject.toml requirements.txt ruff.toml start.sh src tests \
+            "${{ secrets.PROD_SSH_USER }}@${{ secrets.PROD_SSH_HOST }}:${REMOTE_PATH}/"
+
+      - name: Start remote stack
+        run: |
+          ssh "${{ secrets.PROD_SSH_USER }}@${{ secrets.PROD_SSH_HOST }}" \
+            "cd ${REMOTE_PATH} && chmod +x start.sh docker/*.sh && ./start.sh -d"
