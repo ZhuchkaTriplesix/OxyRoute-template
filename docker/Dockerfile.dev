@@ -1,0 +1,28 @@
+FROM python:3.14-slim-bookworm
+
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy \
+    PYTHONPATH=/app
+
+WORKDIR /app
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates curl \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt .
+RUN uv pip install --system --no-cache -r requirements.txt \
+    && uv pip install --system --no-cache ipython debugpy
+
+# Source is mounted as a volume from compose for hot-reload; we still copy a
+# baseline so the image is runnable on its own.
+COPY alembic.ini.example /app/alembic.ini
+COPY src ./src
+
+EXPOSE 8000 5678
+
+CMD ["granian", "--interface", "rsgi", "--host", "0.0.0.0", "--port", "8000", "--reload", "src.main:app"]

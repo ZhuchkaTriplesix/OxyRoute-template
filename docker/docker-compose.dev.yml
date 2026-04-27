@@ -1,0 +1,62 @@
+services:
+  oxyroute-app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.dev
+    container_name: oxyroute-app-dev
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      POSTGRES_IP: postgres
+      POSTGRES_INTERNAL_PORT: 5432
+      REDIS_HOST: redis
+      REDIS_INTERNAL_PORT: 6379
+    ports:
+      - "8000:8000"
+      - "5678:5678"
+    volumes:
+      - ../src:/app/src
+      - ../config.ini:/app/config.ini:ro
+      - ../alembic.ini:/app/alembic.ini:ro
+    command: ["granian", "--interface", "rsgi", "--host", "0.0.0.0", "--port", "8000", "--reload", "src.main:app"]
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: oxyroute-postgres-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: oxyroute_db
+    volumes:
+      - dev_postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d oxyroute_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: oxyroute-redis-dev
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - dev_redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  dev_postgres_data:
+  dev_redis_data:
