@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import contextlib
+
 from oxyroute import App, CORSConfig, SecurityHeadersConfig, apply_cors
 from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
@@ -7,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 from src.config import cors_cfg, docs_cfg, postgres_cfg, redis_cfg, security_cfg
 from src.configuration.state import set_current_app
 from src.database.core import dispose_engine, make_engine, make_session_factory
+from src.middlewares import request_logger_middleware
 from src.redis_client.redis import close_redis, init_redis
 from src.routers import Router
 
@@ -23,9 +26,15 @@ class OxyApp(App):
         self.state.engine = make_engine(postgres_cfg)
         self.state.session_factory = make_session_factory(self.state.engine)
         self.state.redis = await init_redis(redis_cfg)
+        with contextlib.suppress(Exception):
+            await self.setup_database(
+                postgres_cfg.sqlx_url, max_connections=postgres_cfg.pool_size
+            )
         return None
 
     async def __rsgi_del__(self, *args, **kwargs) -> None:
+        with contextlib.suppress(Exception):
+            await self.close_database()
         await close_redis(self.state.redis)
         await dispose_engine(self.state.engine)
         self.state.redis = None
@@ -34,6 +43,7 @@ class OxyApp(App):
         return None
 
     def build(self) -> OxyApp:
+        self.set_middleware(request_logger_middleware)
         apply_cors(
             self,
             CORSConfig(
