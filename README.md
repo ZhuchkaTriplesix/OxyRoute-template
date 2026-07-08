@@ -6,8 +6,10 @@ This template is the OxyRoute counterpart of [Reei-dp/fastapi-template](https://
 
 ## Features
 
-- **OxyRoute 0.3.0** (RSGI) running on **Granian** with Python **3.14**.
-- **PostgreSQL** via async SQLAlchemy 2.0 + asyncpg.
+- **OxyRoute 0.4.0** (RSGI) running on **Granian** with Python **3.14**.
+- **Rust Hot Path DB Pool** (`setup_database` / `close_database`) & dynamic zero-copy queries via `DBQuery`.
+- **Request / Response Middleware Stack** (`app.set_middleware`) demonstrated with request logging.
+- **PostgreSQL** via async SQLAlchemy 2.0 + asyncpg (for full ORM and migration support).
 - **Redis** for caching with a small `RedisController` helper.
 - **Alembic** for database migrations.
 - **Scalar API Reference** at `/api/docs` (HTTP Basic from `config.ini`); built-in `/openapi.json`.
@@ -51,6 +53,7 @@ The application is available at:
 - OpenAPI JSON: <http://localhost:8000/openapi.json>
 - Docs UI (Scalar): <http://localhost:8000/api/docs> (HTTP Basic from `[DOCS]`)
 - Health: <http://localhost:8000/api/root/health>
+- Fast DB Ping (Rust hot path): <http://localhost:8000/api/root/fast-ping>
 
 ### 3. Run (locally without Docker)
 
