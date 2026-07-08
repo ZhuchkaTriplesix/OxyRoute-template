@@ -70,6 +70,13 @@ class PostgresCfg:
             f"@{self.ip}:{self.port}/{self.database_name}"
         )
 
+    @property
+    def sqlx_url(self) -> str:
+        return (
+            f"{self.database}://{self.username}:{self.password}"
+            f"@{self.ip}:{self.port}/{self.database_name}"
+        )
+
 
 @dataclass(frozen=True)
 class GranianCfg:
