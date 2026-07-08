@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from oxyroute import APIRouter, Depends
+from oxyroute import APIRouter, DBQuery, Depends
 
 from src.database.dependencies import get_session_factory
 from src.routers.root import actions
@@ -11,6 +11,7 @@ root_router = APIRouter()
 
 _db_dep = ("session_factory", Depends(get_session_factory))
 _redis_dep = ("redis", Depends(get_redis))
+_fast_db_dep = ("db_res", Depends(DBQuery("SELECT 'pong' AS status")))
 
 
 @root_router.get("/health", dependencies=[_db_dep, _redis_dep])
@@ -21,6 +22,11 @@ async def health(session_factory, redis) -> dict[str, str]:
 @root_router.get("/version")
 def version() -> dict[str, str]:
     return {"name": "oxyroute-template", "version": "0.1.0"}
+
+
+@root_router.get("/fast-ping", dependencies=[_fast_db_dep])
+def fast_ping(db_res: list[dict] | dict | None = None) -> dict:
+    return {"status": "ok", "query_result": db_res}
 
 
 @root_router.get("/items", dependencies=[_db_dep])

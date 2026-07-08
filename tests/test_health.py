@@ -5,7 +5,7 @@ from types import TracebackType
 import pytest
 
 from src.routers.root.actions import health_check
-from src.routers.root.router import version
+from src.routers.root.router import fast_ping, version
 
 
 class FakeSession:
@@ -52,3 +52,10 @@ async def test_health_check_with_fake_dependencies() -> None:
 
 def test_version() -> None:
     assert version() == {"name": "oxyroute-template", "version": "0.1.0"}
+
+
+def test_fast_ping() -> None:
+    assert fast_ping([{"status": "pong"}]) == {
+        "status": "ok",
+        "query_result": [{"status": "pong"}],
+    }
